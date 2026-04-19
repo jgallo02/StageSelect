@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StageSelect — Discover your next production</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    /* ─── Design Tokens ──────────────────────────────────────────── */
+    :root {
+      --bg:          #13100c;
+      --surface:     #1d1812;
+      --surface-2:   #251f18;
+      --surface-3:   #2e271e;
+      --gold:        #c8913a;
+      --gold-light:  #e0aa52;
+      --gold-dim:    rgba(200, 145, 58, 0.22);
+      --gold-glow:   rgba(200, 145, 58, 0.08);
+      --text-1:      #ede6d6;
+      --text-2:      #8c7f6b;
+      --text-3:      #5a5044;
+      --diff-low:    #5a9e6f;
+      --diff-mid:    #c8913a;
+      --diff-high:   #c25240;
+      --radius:      6px;
+      --radius-lg:   10px;
+      --sp:          8px;
+      --drawer-w:    360px;
+      --transition:  0.22s ease;
+    }
+
+    /* ─── Reset ──────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text-1);
+      font-family: 'Outfit', sans-serif;
+      font-weight: 300;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ─── Scrollbar ──────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 3px; }
+
+    /* ─── Layout Shell ───────────────────────────────────────────── */
+    .app {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 calc(var(--sp) * 3);
+      padding-bottom: calc(var(--sp) * 8);
+    }
+
+    /* ─── Header ─────────────────────────────────────────────────── */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: calc(var(--sp) * 5) 0 calc(var(--sp) * 4);
+      border-bottom: 1px solid var(--gold-dim);
+      animation: fadeDown 0.5s ease both;
+    }
+
+    .wordmark-block { display: flex; flex-direction: column; gap: 4px; }
+
+    .wordmark {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 700;
+      font-size: clamp(2rem, 4vw, 2.6rem);
+      letter-spacing: -0.01em;
+      line-height: 1;
+      color: var(--text-1);
+    }
+    .wordmark .stage { color: var(--gold); }
+    .wordmark .select { color: var(--text-1); font-weight: 600; opacity: 0.88; }
+
+    .tagline {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 300;
+      font-size: 0.78rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-3);
+    }
+
+    .header-actions { display: flex; align-items: center; gap: calc(var(--sp) * 2); }
+
+    .btn-history {
+      display: flex; align-items: center; gap: 6px;
+      background: transparent;
+      border: 1px solid var(--gold-dim);
+      color: var(--text-2);
+      font-family: 'Outfit', sans-serif;
+      font-weight: 400;
+      font-size: 0.78rem;
+      letter-spacing: 0.06em;
+      padding: 7px 14px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: border-color var(--transition), color var(--transition), background var(--transition);
+    }
+    .btn-history:hover { border-color: var(--gold); color: var(--gold); background: var(--gold-glow); }
+    .btn-history svg { opacity: 0.7; }
+    .history-count {
+      background: var(--gold);
+      color: var(--bg);
+      font-size: 0.65rem;
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: 10px;
+      min-width: 18px;
+      text-align: center;
+    }
+
+    /* ─── Search Panel ───────────────────────────────────────────── */
+    .search-panel {
+      background: var(--surface);
+      border: 1px solid var(--gold-dim);
+      border-radius: var(--radius-lg);
+      padding: calc(var(--sp) * 4);
+      margin-top: calc(var(--sp) * 4);
+      animation: fadeUp 0.55s 0.1s ease both;
+    }
+
+    .section-label {
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: calc(var(--sp) * 2);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--gold-dim);
+    }
+
+    .required-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: calc(var(--sp) * 2);
+      margin-bottom: calc(var(--sp) * 3);
+    }
+
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field-label {
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      color: var(--text-2);
+    }
+
+    select {
+      appearance: none;
+      background: var(--surface-2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238c7f6b' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 14px center;
+      border: 1px solid rgba(90,80,68,0.4);
+      color: var(--text-1);
+      font-family: 'Outfit', sans-serif;
+      font-weight: 300;
+      font-size: 0.88rem;
+      padding: 10px 36px 10px 14px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: border-color var(--transition), background var(--transition);
+      outline: none;
+      width: 100%;
+    }
+    select:focus { border-color: var(--gold); background: var(--surface-3); }
+    select option { background: var(--surface-2); color: var(--text-1); }
+
+    /* Optional filters toggle */
+    .optional-toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: none;
+      border: none;
+      color: var(--text-2);
+      font-family: 'Outfit', sans-serif;
+      font-weight: 400;
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      margin-bottom: calc(var(--sp) * 2);
+      padding: 0;
+      transition: color var(--transition);
+    }
+    .optional-toggle:hover { color: var(--gold); }
+    .optional-toggle .chevron {
+      transition: transform var(--transition);
+      display: inline-block;
+    }
+    .optional-toggle.open .chevron { transform: rotate(180deg); }
+
+    .optional-filters {
+      overflow: hidden;
+      max-height: 0;
+      transition: max-height 0.38s cubic-bezier(0.4,0,0.2,1);
+    }
+    .optional-filters.open { max-height: 320px; }
+
+    .optional-label {
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-3);
+      margin-bottom: calc(var(--sp) * 2);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .optional-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(90,80,68,0.25);
+    }
+
+    .optional-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: calc(var(--sp) * 2);
+      padding-bottom: calc(var(--sp) * 3);
+    }
+
+    /* Find Shows button */
+    .btn-find {
+      width: 100%;
+      background: var(--gold);
+      color: #13100c;
+      border: none;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      font-size: 0.9rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 14px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      margin-top: calc(var(--sp) * 3);
+      transition: background var(--transition), transform 0.12s ease, box-shadow var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-find::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.08) 100%);
+      pointer-events: none;
+    }
+    .btn-find:hover {
+      background: var(--gold-light);
+      box-shadow: 0 4px 24px rgba(200, 145, 58, 0.28);
+      transform: translateY(-1px);
+    }
+    .btn-find:active { transform: translateY(0); }
+    .btn-find:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* ─── Results Area ────────────────────────────────────────────── */
+    .results-area {
+      margin-top: calc(var(--sp) * 5);
+      min-height: 400px;
+    }
+
+    /* Empty state */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: calc(var(--sp) * 8) 0;
+      text-align: center;
+      animation: fadeIn 0.5s 0.25s ease both;
+    }
+
+    .spotlight-svg {
+      width: 140px;
+      height: 140px;
+      margin-bottom: calc(var(--sp) * 3);
+      animation: spotPulse 3.5s ease-in-out infinite;
+    }
+
+    .empty-text {
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      font-size: 1.05rem;
+      color: var(--text-3);
+      max-width: 340px;
+      line-height: 1.7;
+    }
+
+    /* Loading state */
+    .loading-state {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: calc(var(--sp) * 8) 0;
+      text-align: center;
+    }
+    .loading-state.active { display: flex; }
+
+    .spotlight-loader {
+      width: 120px;
+      height: 120px;
+      position: relative;
+      margin-bottom: calc(var(--sp) * 4);
+    }
+    .spot-ring {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 1.5px solid transparent;
+    }
+    .spot-ring-1 {
+      border-top-color: var(--gold);
+      animation: spin 1.2s linear infinite;
+    }
+    .spot-ring-2 {
+      inset: 12px;
+      border-top-color: rgba(200,145,58,0.5);
+      animation: spin 1.8s linear infinite reverse;
+    }
+    .spot-ring-3 {
+      inset: 24px;
+      border-top-color: rgba(200,145,58,0.25);
+      animation: spin 2.4s linear infinite;
+    }
+    .spot-icon {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .loading-text {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 300;
+      font-size: 0.85rem;
+      color: var(--text-2);
+      letter-spacing: 0.04em;
+      height: 1.5em;
+      overflow: hidden;
+      position: relative;
+    }
+    .loading-line {
+      position: absolute;
+      left: 0; right: 0;
+      animation: textCycle 3s linear infinite;
+    }
+    .loading-line:nth-child(2) { animation-delay: 1.5s; opacity: 0; }
+
+    /* Results */
+    .results-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: calc(var(--sp) * 3);
+      animation: fadeIn 0.4s ease both;
+    }
+
+    .results-summary {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 500;
+      font-size: 0.82rem;
+      color: var(--text-2);
+      letter-spacing: 0.04em;
+    }
+    .results-summary strong {
+      color: var(--text-1);
+      font-weight: 600;
+    }
+
+    .btn-regenerate {
+      display: flex; align-items: center; gap: 6px;
+      background: transparent;
+      border: 1px solid var(--gold-dim);
+      color: var(--text-2);
+      font-family: 'Outfit', sans-serif;
+      font-weight: 400;
+      font-size: 0.75rem;
+      letter-spacing: 0.06em;
+      padding: 7px 14px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: border-color var(--transition), color var(--transition), background var(--transition);
+    }
+    .btn-regenerate:hover { border-color: var(--gold); color: var(--gold); background: var(--gold-glow); }
+
+    .results-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: calc(var(--sp) * 3);
+    }
+
+    /* ─── Show Card ──────────────────────────────────────────────── */
+    .show-card {
+      background: var(--surface);
+      border: 1px solid rgba(200,145,58,0.15);
+      border-radius: var(--radius-lg);
+      padding: calc(var(--sp) * 3);
+      display: flex;
+      flex-direction: column;
+      gap: calc(var(--sp) * 2.5);
+      box-shadow: 0 2px 16px rgba(0,0,0,0.4);
+      transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition);
+      animation: cardReveal 0.45s ease both;
+    }
+    .show-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(200,145,58,0.38);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(200,145,58,0.12);
+    }
+
+    .card-top { display: flex; flex-direction: column; gap: 8px; }
+
+    .card-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 600;
+      font-size: 1.3rem;
+      color: var(--text-1);
+      line-height: 1.2;
+    }
+
+    .card-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+    .version-badge {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 500;
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      background: rgba(200,145,58,0.15);
+      color: var(--gold);
+      border: 1px solid rgba(200,145,58,0.3);
+      padding: 2px 9px;
+      border-radius: 20px;
+    }
+
+    .card-broadway {
+      font-size: 0.75rem;
+      color: var(--text-3);
+      font-weight: 300;
+    }
+
+    .card-divider {
+      height: 1px;
+      background: rgba(90,80,68,0.3);
+    }
+
+    .card-synopsis {
+      font-size: 0.82rem;
+      font-weight: 300;
+      color: var(--text-2);
+      line-height: 1.65;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* Difficulty grid */
+    .difficulty-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .diff-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--surface-2);
+      border-radius: var(--radius);
+      padding: 6px 10px;
+    }
+
+    .diff-label {
+      font-size: 0.68rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-3);
+    }
+
+    .diff-value {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.72rem;
+      font-weight: 400;
+    }
+    .diff-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .diff-dot.low  { background: var(--diff-low); box-shadow: 0 0 4px var(--diff-low); }
+    .diff-dot.mid  { background: var(--diff-mid); box-shadow: 0 0 4px rgba(200,145,58,0.5); }
+    .diff-dot.high { background: var(--diff-high); box-shadow: 0 0 4px rgba(194,82,64,0.5); }
+    .diff-dot.none { background: var(--text-3); }
+
+    .diff-text.low  { color: var(--diff-low); }
+    .diff-text.mid  { color: var(--diff-mid); }
+    .diff-text.high { color: var(--diff-high); }
+    .diff-text.none { color: var(--text-3); }
+
+    /* Card footer */
+    .card-footer {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding-top: calc(var(--sp) * 0.5);
+      border-top: 1px solid rgba(90,80,68,0.3);
+    }
+
+    .card-footer-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .cast-size {
+      font-size: 0.78rem;
+      color: var(--text-2);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .cast-size svg { opacity: 0.5; }
+
+    .licensor-link {
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: var(--gold);
+      text-decoration: none;
+      border: 1px solid rgba(200,145,58,0.25);
+      padding: 4px 10px;
+      border-radius: var(--radius);
+      transition: background var(--transition), border-color var(--transition);
+      white-space: nowrap;
+    }
+    .licensor-link:hover { background: rgba(200,145,58,0.1); border-color: var(--gold); }
+
+    .card-disclaimer {
+      font-size: 0.65rem;
+      color: var(--text-3);
+      font-style: italic;
+      line-height: 1.5;
+    }
+
+    /* ─── History Drawer ─────────────────────────────────────────── */
+    .drawer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--transition);
+      z-index: 40;
+    }
+    .drawer-overlay.open { opacity: 1; pointer-events: all; }
+
+    .history-drawer {
+      position: fixed;
+      top: 0; right: 0; bottom: 0;
+      width: var(--drawer-w);
+      background: var(--surface);
+      border-left: 1px solid var(--gold-dim);
+      transform: translateX(100%);
+      transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .history-drawer.open { transform: translateX(0); }
+
+    .drawer-header {
+      padding: calc(var(--sp) * 3) calc(var(--sp) * 3) calc(var(--sp) * 2);
+      border-bottom: 1px solid var(--gold-dim);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .drawer-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 600;
+      font-size: 1.15rem;
+      color: var(--text-1);
+    }
+
+    .btn-close {
+      background: none;
+      border: none;
+      color: var(--text-3);
+      cursor: pointer;
+      padding: 4px;
+      border-radius: var(--radius);
+      transition: color var(--transition);
+      display: flex;
+    }
+    .btn-close:hover { color: var(--text-1); }
+
+    .drawer-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: calc(var(--sp) * 2) calc(var(--sp) * 3);
+    }
+
+    .history-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: var(--text-3);
+      font-style: italic;
+      font-size: 0.85rem;
+      text-align: center;
+      padding: calc(var(--sp) * 4);
+      gap: calc(var(--sp) * 2);
+    }
+
+    .history-entry {
+      border: 1px solid rgba(90,80,68,0.3);
+      border-radius: var(--radius);
+      margin-bottom: calc(var(--sp) * 2);
+      overflow: hidden;
+      background: var(--surface-2);
+    }
+
+    .history-entry-header {
+      padding: calc(var(--sp) * 1.5) calc(var(--sp) * 2);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: background var(--transition);
+    }
+    .history-entry-header:hover { background: var(--surface-3); }
+
+    .history-entry-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .history-filters { display: flex; gap: 4px; flex-wrap: wrap; }
+
+    .h-pill {
+      font-size: 0.62rem;
+      font-weight: 500;
+      background: rgba(200,145,58,0.1);
+      color: var(--gold);
+      border: 1px solid rgba(200,145,58,0.2);
+      padding: 2px 7px;
+      border-radius: 12px;
+    }
+
+    .history-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .history-time {
+      font-size: 0.67rem;
+      color: var(--text-3);
+    }
+
+    .history-count-badge {
+      font-size: 0.67rem;
+      font-weight: 500;
+      color: var(--text-2);
+    }
+
+    .history-chevron {
+      font-size: 0.7rem;
+      color: var(--text-3);
+      transition: transform var(--transition);
+    }
+    .history-entry.expanded .history-chevron { transform: rotate(180deg); }
+
+    .history-shows {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.28s ease;
+    }
+    .history-entry.expanded .history-shows { max-height: 200px; }
+
+    .history-show-list {
+      padding: calc(var(--sp)) calc(var(--sp) * 2) calc(var(--sp) * 1.5);
+      border-top: 1px solid rgba(90,80,68,0.2);
+    }
+
+    .history-show-item {
+      font-size: 0.75rem;
+      color: var(--text-2);
+      padding: 4px 0;
+      border-bottom: 1px solid rgba(90,80,68,0.15);
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 0.88rem;
+    }
+    .history-show-item:last-child { border-bottom: none; }
+
+    /* ─── Keyframes ──────────────────────────────────────────────── */
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    @keyframes cardReveal {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes spotPulse {
+      0%, 100% { opacity: 0.5; filter: drop-shadow(0 0 8px rgba(200,145,58,0.15)); }
+      50%       { opacity: 0.9; filter: drop-shadow(0 0 20px rgba(200,145,58,0.3)); }
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    @keyframes textCycle {
+      0%   { opacity: 0; transform: translateY(6px); }
+      10%  { opacity: 1; transform: translateY(0); }
+      40%  { opacity: 1; transform: translateY(0); }
+      50%  { opacity: 0; transform: translateY(-6px); }
+      100% { opacity: 0; transform: translateY(-6px); }
+    }
+
+    /* ─── Mobile ─────────────────────────────────────────────────── */
+    @media (max-width: 700px) {
+      .app { padding: 0 calc(var(--sp) * 2); }
+
+      .header { padding: calc(var(--sp) * 3) 0 calc(var(--sp) * 3); }
+      .wordmark { font-size: 1.9rem; }
+
+      .required-row { grid-template-columns: 1fr; }
+      .optional-grid { grid-template-columns: 1fr 1fr; }
+
+      .results-grid { grid-template-columns: 1fr; }
+
+      .history-drawer {
+        top: auto;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        height: 65vh;
+        border-left: none;
+        border-top: 1px solid var(--gold-dim);
+        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+        transform: translateY(100%);
+      }
+      .history-drawer.open { transform: translateY(0); }
+    }
+
+    @media (max-width: 480px) {
+      .optional-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ─── Header ──────────────────────────────────────────────── -->
+  <header class="header">
+    <div class="wordmark-block">
+      <div class="wordmark">
+        <span class="stage">Stage</span><span class="select">Select</span>
+      </div>
+      <div class="tagline">Discover your next production</div>
+    </div>
+    <div class="header-actions">
+      <button class="btn-history" id="historyBtn" onclick="toggleHistory()">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.25"/>
+          <path d="M7 4v3.5l2 1.5" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/>
+        </svg>
+        History
+        <span class="history-count" id="historyCount" style="display:none">0</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ─── Search Panel ─────────────────────────────────────────── -->
+  <section class="search-panel">
+    <div class="section-label">Required</div>
+    <div class="required-row">
+      <div class="field">
+        <label class="field-label" for="ageRange">Age Range</label>
+        <select id="ageRange">
+          <option value="">Select age range…</option>
+          <option value="Elementary">Elementary</option>
+          <option value="Middle School">Middle School</option>
+          <option value="High School">High School</option>
+          <option value="Adult">Adult</option>
+          <option value="All Ages">All Ages</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="field-label" for="showType">Show Type</label>
+        <select id="showType">
+          <option value="">Select show type…</option>
+          <option value="Musical">Musical</option>
+          <option value="Play">Play</option>
+          <option value="Drama">Drama</option>
+          <option value="Comedy">Comedy</option>
+          <option value="One-Act">One-Act</option>
+          <option value="Revue">Revue</option>
+        </select>
+      </div>
+    </div>
+
+    <button class="optional-toggle" id="optToggle" onclick="toggleOptional()">
+      <span class="chevron">▾</span>
+      Optional Filters
+    </button>
+
+    <div class="optional-filters" id="optFilters">
+      <div class="optional-label">Refine Results</div>
+      <div class="optional-grid">
+        <div class="field">
+          <label class="field-label" for="castSize">Cast Size</label>
+          <select id="castSize">
+            <option value="">Any</option>
+            <option value="Under 10">Under 10</option>
+            <option value="10–20">10–20</option>
+            <option value="20–30">20–30</option>
+            <option value="30+">30+</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="field-label" for="setDiff">Set Difficulty</label>
+          <select id="setDiff">
+            <option value="">Any</option>
+            <option value="Minimal">Minimal</option>
+            <option value="Moderate">Moderate</option>
+            <option value="Complex">Complex</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="field-label" for="danceDiff">Dancing</label>
+          <select id="danceDiff">
+            <option value="">Any</option>
+            <option value="None">None</option>
+            <option value="Basic">Basic</option>
+            <option value="Moderate">Moderate</option>
+            <option value="Intensive">Intensive</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="field-label" for="costumeReq">Costumes</label>
+          <select id="costumeReq">
+            <option value="">Any</option>
+            <option value="Simple">Simple</option>
+            <option value="Moderate">Moderate</option>
+            <option value="Elaborate">Elaborate</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="field-label" for="musicDiff">Music</label>
+          <select id="musicDiff">
+            <option value="">Any</option>
+            <option value="No Music">No Music</option>
+            <option value="Easy">Easy</option>
+            <option value="Moderate">Moderate</option>
+            <option value="Challenging">Challenging</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-find" id="findBtn" onclick="findShows()">Find Shows</button>
+  </section>
+
+  <!-- ─── Results Area ─────────────────────────────────────────── -->
+  <section class="results-area" id="resultsArea">
+
+    <!-- Empty State -->
+    <div class="empty-state" id="emptyState">
+      <svg class="spotlight-svg" viewBox="0 0 140 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Stage floor line -->
+        <line x1="20" y1="118" x2="120" y2="118" stroke="rgba(200,145,58,0.25)" stroke-width="1.5" stroke-linecap="round"/>
+        <!-- Spotlight beam — filled trapezoid -->
+        <path d="M70 18 L36 112 L104 112 Z" fill="url(#beamGrad)" />
+        <!-- Concentric arc rings -->
+        <path d="M50 38 Q70 25 90 38" stroke="rgba(200,145,58,0.22)" stroke-width="1" fill="none" stroke-linecap="round"/>
+        <path d="M42 56 Q70 38 98 56" stroke="rgba(200,145,58,0.18)" stroke-width="1" fill="none" stroke-linecap="round"/>
+        <path d="M35 76 Q70 52 105 76" stroke="rgba(200,145,58,0.12)" stroke-width="1" fill="none" stroke-linecap="round"/>
+        <!-- Spotlight source circle -->
+        <circle cx="70" cy="18" r="6" fill="none" stroke="rgba(200,145,58,0.7)" stroke-width="1.5"/>
+        <circle cx="70" cy="18" r="2.5" fill="rgba(200,145,58,0.8)"/>
+        <!-- Glow halo -->
+        <circle cx="70" cy="18" r="9" fill="none" stroke="rgba(200,145,58,0.15)" stroke-width="2"/>
+        <defs>
+          <linearGradient id="beamGrad" x1="70" y1="18" x2="70" y2="112" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="rgba(200,145,58,0.18)"/>
+            <stop offset="100%" stop-color="rgba(200,145,58,0.04)"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <p class="empty-text">Select your filters above to discover your next production</p>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-state" id="loadingState">
+      <div class="spotlight-loader">
+        <div class="spot-ring spot-ring-1"></div>
+        <div class="spot-ring spot-ring-2"></div>
+        <div class="spot-ring spot-ring-3"></div>
+        <div class="spot-icon">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <circle cx="14" cy="8" r="4" fill="none" stroke="rgba(200,145,58,0.7)" stroke-width="1.5"/>
+            <circle cx="14" cy="8" r="1.5" fill="rgba(200,145,58,0.8)"/>
+            <path d="M8 12 L3 24 L25 24 Z" fill="url(#loaderBeam)"/>
+            <defs>
+              <linearGradient id="loaderBeam" x1="14" y1="12" x2="14" y2="24" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="rgba(200,145,58,0.25)"/>
+                <stop offset="100%" stop-color="rgba(200,145,58,0.05)"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+      </div>
+      <div class="loading-text" id="loadingText">
+        <span class="loading-line">Searching licensed catalogs…</span>
+        <span class="loading-line">Checking Broadway availability…</span>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div id="resultsContent" style="display:none">
+      <div class="results-header">
+        <div class="results-summary" id="resultsSummary"></div>
+        <button class="btn-regenerate" onclick="findShows()">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <path d="M10.5 2A5 5 0 1 0 11 6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+            <path d="M8.5 2h2V0" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Regenerate
+        </button>
+      </div>
+      <div class="results-grid" id="resultsGrid"></div>
+    </div>
+
+  </section>
+</div>
+
+<!-- ─── History Drawer ──────────────────────────────────────── -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="toggleHistory()"></div>
+<aside class="history-drawer" id="historyDrawer">
+  <div class="drawer-header">
+    <div class="drawer-title">Search History</div>
+    <button class="btn-close" onclick="toggleHistory()">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </button>
+  </div>
+  <div class="drawer-body" id="drawerBody">
+    <div class="history-empty" id="historyEmpty">
+      <svg width="36" height="36" viewBox="0 0 36 36" fill="none" opacity="0.3">
+        <circle cx="18" cy="18" r="16" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M18 10v9l5 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      No searches yet
+    </div>
+    <div id="historyList"></div>
+  </div>
+</aside>
+
+<script>
+  /* ─── Show Data ──────────────────────────────────────────────── */
+  const SHOWS = [
+    {
+      title: "Into the Woods",
+      version: "Full",
+      broadway: "1987",
+      synopsis: "A musical fantasy intertwining multiple fairy-tale characters as they pursue their wishes — and discover the bittersweet consequences of getting what you want.",
+      difficulty: { set: "High", dancing: "Medium", costumes: "High", music: "Challenging" },
+      cast: "26 actors",
+      licensor: "Music Theatre International",
+      licensorUrl: "https://www.mtishows.com"
+    },
+    {
+      title: "Godspell",
+      version: "Full",
+      broadway: "1971",
+      synopsis: "A vibrant retelling of the Gospel of Matthew through song, dance, and parable, beloved for its flexible staging and ensemble energy.",
+      difficulty: { set: "Minimal", dancing: "Moderate", costumes: "Simple", music: "Moderate" },
+      cast: "10 actors",
+      licensor: "Music Theatre International",
+      licensorUrl: "https://www.mtishows.com"
+    },
+    {
+      title: "Matilda the Musical",
+      version: "Junior",
+      broadway: "2013",
+      synopsis: "Roald Dahl's beloved story of an extraordinary girl who dares to take a stand against the bullying adults in her life, set to a dazzling Tony-winning score.",
+      difficulty: { set: "Moderate", dancing: "Intensive", costumes: "Moderate", music: "Challenging" },
+      cast: "30+ actors",
+      licensor: "Music Theatre International",
+      licensorUrl: "https://www.mtishows.com"
+    },
+    {
+      title: "The 25th Annual Putnam County Spelling Bee",
+      version: "Full",
+      broadway: "2005",
+      synopsis: "Six quirky adolescents compete in a spelling bee, revealing their backstories through song, comedy, and unexpected audience participation.",
+      difficulty: { set: "Minimal", dancing: "Basic", costumes: "Simple", music: "Moderate" },
+      cast: "8 actors",
+      licensor: "Music Theatre International",
+      licensorUrl: "https://www.mtishows.com"
+    },
+    {
+      title: "Little Women",
+      version: "Full",
+      broadway: "2005",
+      synopsis: "Louisa May Alcott's timeless coming-of-age story follows the March sisters through love, loss, and the passionate pursuit of their individual dreams.",
+      difficulty: { set: "Moderate", dancing: "None", costumes: "Elaborate", music: "Moderate" },
+      cast: "18 actors",
+      licensor: "Theatrical Rights Worldwide",
+      licensorUrl: "https://www.theatricalrights.com"
+    }
+  ];
+
+  /* ─── State ──────────────────────────────────────────────────── */
+  let appState = 'empty'; // empty | loading | results
+  let searchHistory = [];
+  let historyOpen = false;
+
+  /* ─── Helpers ────────────────────────────────────────────────── */
+  function diffClass(val) {
+    const v = (val || '').toLowerCase();
+    if (v === 'none' || v === 'no music') return 'none';
+    if (v === 'low' || v === 'minimal' || v === 'simple' || v === 'easy' || v === 'basic') return 'low';
+    if (v === 'high' || v === 'complex' || v === 'elaborate' || v === 'challenging' || v === 'intensive') return 'high';
+    return 'mid';
+  }
+
+  function relTime(ts) {
+    const diff = Math.floor((Date.now() - ts) / 1000);
+    if (diff < 60) return 'Just now';
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    return `${Math.floor(diff / 86400)}d ago`;
+  }
+
+  function getFilters() {
+    return {
+      ageRange: document.getElementById('ageRange').value,
+      showType: document.getElementById('showType').value,
+      castSize: document.getElementById('castSize').value,
+      setDiff:  document.getElementById('setDiff').value,
+      danceDiff: document.getElementById('danceDiff').value,
+      costumeReq: document.getElementById('costumeReq').value,
+      musicDiff: document.getElementById('musicDiff').value,
+    };
+  }
+
+  /* ─── UI State Machine ───────────────────────────────────────── */
+  function showEmpty() {
+    document.getElementById('emptyState').style.display = 'flex';
+    document.getElementById('loadingState').classList.remove('active');
+    document.getElementById('resultsContent').style.display = 'none';
+    appState = 'empty';
+  }
+
+  function showLoading() {
+    document.getElementById('emptyState').style.display = 'none';
+    document.getElementById('loadingState').classList.add('active');
+    document.getElementById('resultsContent').style.display = 'none';
+    appState = 'loading';
+  }
+
+  function showResults(filters) {
+    document.getElementById('emptyState').style.display = 'none';
+    document.getElementById('loadingState').classList.remove('active');
+
+    const filterParts = [filters.ageRange, filters.showType].filter(Boolean);
+    document.getElementById('resultsSummary').innerHTML =
+      `<strong>${SHOWS.length} shows</strong> found for ${filterParts.join(' · ')}`;
+
+    const grid = document.getElementById('resultsGrid');
+    grid.innerHTML = '';
+
+    SHOWS.forEach((show, i) => {
+      const dc = show.difficulty;
+      grid.innerHTML += `
+        <article class="show-card" style="animation-delay:${i * 80}ms">
+          <div class="card-top">
+            <h2 class="card-title">${show.title}</h2>
+            <div class="card-meta">
+              <span class="version-badge">${show.version}</span>
+              <span class="card-broadway">Broadway ${show.broadway}</span>
+            </div>
+          </div>
+          <div class="card-divider"></div>
+          <p class="card-synopsis">${show.synopsis}</p>
+          <div class="difficulty-grid">
+            ${['set','dancing','costumes','music'].map(key => {
+              const val = dc[key] || '—';
+              const cls = diffClass(val);
+              return `<div class="diff-item">
+                <span class="diff-label">${key}</span>
+                <div class="diff-value">
+                  <span class="diff-dot ${cls}"></span>
+                  <span class="diff-text ${cls}">${val}</span>
+                </div>
+              </div>`;
+            }).join('')}
+          </div>
+          <div class="card-footer">
+            <div class="card-footer-row">
+              <span class="cast-size">
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                  <circle cx="5" cy="4" r="2.5" stroke="currentColor" stroke-width="1.2"/>
+                  <path d="M1 11.5c0-2.2 1.8-4 4-4s4 1.8 4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                  <circle cx="9.5" cy="4" r="1.8" stroke="currentColor" stroke-width="1.2"/>
+                  <path d="M11.5 11.5c0-1.6-1-2.9-2.2-3.4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                </svg>
+                ${show.cast}
+              </span>
+              <a class="licensor-link" href="${show.licensorUrl}" target="_blank" rel="noopener">${show.licensor} ↗</a>
+            </div>
+            <p class="card-disclaimer">Verify current availability with the licensing house before planning your production.</p>
+          </div>
+        </article>`;
+    });
+
+    document.getElementById('resultsContent').style.display = 'block';
+    appState = 'results';
+  }
+
+  /* ─── Find Shows ─────────────────────────────────────────────── */
+  function findShows() {
+    const filters = getFilters();
+    if (!filters.ageRange || !filters.showType) {
+      // Shake the required fields
+      ['ageRange', 'showType'].forEach(id => {
+        if (!document.getElementById(id).value) {
+          const el = document.getElementById(id);
+          el.style.borderColor = 'rgba(194,82,64,0.7)';
+          el.style.animation = 'none';
+          setTimeout(() => { el.style.borderColor = ''; }, 1800);
+        }
+      });
+      return;
+    }
+
+    document.getElementById('findBtn').disabled = true;
+    showLoading();
+
+    setTimeout(() => {
+      // Record to history
+      const entry = {
+        id: Date.now(),
+        ts: Date.now(),
+        filters,
+        count: SHOWS.length,
+        shows: SHOWS.map(s => s.title)
+      };
+      searchHistory.unshift(entry);
+      updateHistoryUI();
+
+      showResults(filters);
+      document.getElementById('findBtn').disabled = false;
+    }, 2200);
+  }
+
+  /* ─── Optional Filters Toggle ────────────────────────────────── */
+  function toggleOptional() {
+    const btn = document.getElementById('optToggle');
+    const panel = document.getElementById('optFilters');
+    const isOpen = panel.classList.contains('open');
+    panel.classList.toggle('open', !isOpen);
+    btn.classList.toggle('open', !isOpen);
+    btn.querySelector('span:last-child').textContent =
+      isOpen ? 'Optional Filters' : 'Hide Filters';
+  }
+
+  /* ─── History Drawer ─────────────────────────────────────────── */
+  function toggleHistory() {
+    historyOpen = !historyOpen;
+    document.getElementById('historyDrawer').classList.toggle('open', historyOpen);
+    document.getElementById('drawerOverlay').classList.toggle('open', historyOpen);
+    document.body.style.overflow = historyOpen ? 'hidden' : '';
+  }
+
+  function updateHistoryUI() {
+    const count = searchHistory.length;
+    const badge = document.getElementById('historyCount');
+    badge.textContent = count;
+    badge.style.display = count > 0 ? 'inline' : 'none';
+
+    document.getElementById('historyEmpty').style.display = count === 0 ? 'flex' : 'none';
+
+    const list = document.getElementById('historyList');
+    list.innerHTML = searchHistory.map((entry, idx) => {
+      const pills = Object.entries(entry.filters)
+        .filter(([_, v]) => v)
+        .map(([_, v]) => `<span class="h-pill">${v}</span>`)
+        .join('');
+      return `
+        <div class="history-entry" id="hentry-${idx}" onclick="toggleHistoryEntry(${idx})">
+          <div class="history-entry-header">
+            <div class="history-entry-top">
+              <div class="history-filters">${pills}</div>
+              <span class="history-chevron">▾</span>
+            </div>
+            <div class="history-meta">
+              <span class="history-time">${relTime(entry.ts)}</span>
+              <span class="history-count-badge">${entry.count} shows</span>
+            </div>
+          </div>
+          <div class="history-shows">
+            <div class="history-show-list">
+              ${entry.shows.map(t => `<div class="history-show-item">${t}</div>`).join('')}
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function toggleHistoryEntry(idx) {
+    const el = document.getElementById(`hentry-${idx}`);
+    el.classList.toggle('expanded');
+  }
+
+  /* ─── Init ───────────────────────────────────────────────────── */
+  showEmpty();
+  updateHistoryUI();
+</script>
+</body>
+</html>
